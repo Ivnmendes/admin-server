@@ -1,0 +1,51 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'css/custom.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <div class="card shadow">
+    <div class="card-body">
+
+      {% if url_form %}
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <h2 class="mb-4">Adicionar Mod por URL</h2>
+          {% for field in url_form %}
+            <div class="mb-3">
+              <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}
+                <div class="invalid-feedback d-block">{{ field.errors|striptags }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+          <button type="submit" name="url_submit" class="btn btn-primary">Adicionar Mod</button>
+        </form>
+
+      {% elif manual_form %}
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <h2 class="mb-4">Adicionar Mod Manualmente</h2>
+          {% for field in manual_form %}
+            <div class="mb-3">
+              <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}
+                <div class="invalid-feedback d-block">{{ field.errors|striptags }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+          <button type="submit" name="manual_submit" class="btn btn-success">Salvar Mod</button>
+        </form>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
