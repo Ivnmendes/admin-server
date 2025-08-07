@@ -20,15 +20,14 @@ class Mod(models.Model):
     )
 
     STATUS_CHOICES = [
-        ('active', 'Active'),
-        ('inactive', 'Inactive'),
-        ('pending', 'Pending'),
+        ('enabled', 'Habilitado'),
+        ('disabled', 'Desabilitado'),
     ]
 
     status = models.CharField(
         max_length=10,
         choices=STATUS_CHOICES,
-        default='pending',
+        default='disabled',
     )
 
     name = models.CharField(
@@ -55,6 +54,9 @@ class Mod(models.Model):
         help_text='Data e hora em que o mod foi sugerido.',
     )
 
-
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('mods:mod_detail', args=[str(self.mod_id)])

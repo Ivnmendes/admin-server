@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>{{ object.name }}</h1>
+    <p><strong>Workshop ID:</strong> {{ object.workshop_id }}</p>
+    <p><strong>Mod ID:</strong> {{ object.mod_id }}</p>
+    <p><strong>Status:</strong> {{ object.get_status_display }}</p>
+    <p><strong>Data de Criação:</strong> {{ object.created_at }}</p>
+    <p><strong>Adicionado por:</strong> {{ object.suggested_by }}</p>
+{% endblock %}
