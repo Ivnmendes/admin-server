@@ -10,6 +10,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(BASE_DIR / '.env')
 
 PZ_CONFIG_PATH = env('PZ_CONFIG_PATH')
+PZ_SCRIPT_START_PATH = env('PZ_SCRIPT_START_PATH')
+PZ_SCRIPT_STOP_PATH = env('PZ_SCRIPT_STOP_PATH')
+PZ_SCRIPT_RESTART_PATH = env('PZ_SCRIPT_RESTART_PATH')
+PZ_SCRIPT_RESTART_WORLD_PATH = env('PZ_SCRIPT_RESTART_WORLD_PATH')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
