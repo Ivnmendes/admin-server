@@ -18,7 +18,7 @@ def parar_servidor_view(request):
     Script de parada do servidor.
     """
 
-    script_path = '/home/ctism/Documentos/admin-server/adminserver/mods/scripts/parar_servidor.sh'
+    script_path = '/home/opc/stop_pz.sh'
 
     try:
         result = subprocess.run(
@@ -43,7 +43,7 @@ def reiniciar_servidor_view(request):
     Script de reinicialização do servidor.
     """
 
-    script_path = '/home/ctism/Documentos/admin-server/adminserver/mods/scripts/reiniciar_servidor.sh'
+    script_path = '/home/opc/restart_pz.sh'
 
     try:
         result = subprocess.run(
@@ -70,7 +70,7 @@ def iniciar_servidor_view(request):
     Script de inicialização do servidor.
     """
 
-    script_path = '/home/ctism/Documentos/admin-server/adminserver/mods/scripts/iniciar_servidor.sh'
+    script_path = '/home/opc/start_pz.sh'
 
     try:
         result = subprocess.run(
@@ -87,4 +87,4 @@ def iniciar_servidor_view(request):
         messages.error(request, f"Erro ao executar o script de inicialização.")
         print(f"Erro no script: {e.stderr}")
 
-    return redirect(reverse('jet-dashboard'))
+    return redirect(reverse(''))
