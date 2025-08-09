@@ -16,10 +16,15 @@ class Build42Error(Exception):
 
 
 def scrappling_steam_workshop(url, user):
+
+    results = { 'errors': [], 'success': [] }
+
     try:
         match = re.search(r'id=(\d+)', url)
         if not match:
-            return None, None, None
+            logger.error(f"URL inválida ou sem ID do workshop: {url}")
+            results['errors'].append(f"URL inválida ou sem ID do workshop: {url}")
+            return None, None, None, results
         # Extrai o ID do workshop da URL
         workshop_id = match.group(1)
 
@@ -55,24 +60,29 @@ def scrappling_steam_workshop(url, user):
                 mod_id = ','.join([s.strip() for s in mod_id_text.split(',')])
 
         else:
-            print("Mod ID not found in the page.")
-            return None, None, None
-        
+            logger.error(f"Mod ID não encontrado na descrição: {url}")
+            results['errors'].append(f"Mod ID não encontrado na descrição: {url}")
+            return None, None, None, results
+
         # Verifica se o mod tem requisitos obrigatórios
         # Se sim, tenta extrair o nome e ID do mod requerido
         requirements = soup.find('div', class_='requiredItemsContainer')
         if requirements:
-            requirements_url = requirements.find('a')['href']
-            AddMod(requirements_url, user)
+            links = requirements.find_all('a')
+            for link in links:
+                requirements_url = link.get('href')
+                if requirements_url:
+                    results = AddMod(requirements_url, user)
 
-        return title, workshop_id, mod_id
-    
+        return title, workshop_id, mod_id, results
+
     except Build42Error:
         raise
 
     except Exception as e:
         logger.error(f"Erro no scraping: {e}, url={url}, workshop_id={workshop_id}, mod_id={mod_id if 'mod_id' in locals() else 'N/A'}")
-        return None, None, None
+        results['errors'].append(f"Erro no scraping: {e}, url={url}")
+        return None, None, None, results
 
 
 def AddMod(urls, user):
@@ -84,8 +94,9 @@ def AddMod(urls, user):
     for url in urls.split(';'):
         url = url.strip()
         try:
-            name, workshop_id, mod_id = scrappling_steam_workshop(url, user)
-            if not name or not workshop_id or not mod_id:
+            name, workshop_id, mod_id, results = scrappling_steam_workshop(url, user)
+
+            if results['errors']:
                 results['errors'].append(name if name else url)
                 continue
 

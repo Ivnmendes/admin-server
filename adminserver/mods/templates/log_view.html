@@ -1,0 +1,9 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Últimas 100 linhas do Log</h1>
+<pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; max-height: 600px; overflow-y: scroll;">
+{% for line in lines %}
+{{ line }}
+{% endfor %}
+</pre>
+{% endblock %}

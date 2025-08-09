@@ -44,6 +44,7 @@ class CustomIndexDashboard(Dashboard):
             children=[
                 {'title': 'Adicionar Novo Mod', 'url': reverse('admin:mods_mod_add')},
                 {'title': 'Gerenciar Mods', 'url': reverse('admin:mods_mod_changelist')},
+                {'title': 'Ver Logs', 'url': reverse('mods:view_logs')},
             ],
             column=0,
             order=0

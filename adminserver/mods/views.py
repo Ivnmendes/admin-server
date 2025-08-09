@@ -1,3 +1,5 @@
+import os
+from django.shortcuts import render
 from django.urls import reverse
 from .models import Mod
 import subprocess
@@ -43,28 +45,32 @@ def executar_comando(script_path, acao):
 
 
 @staff_member_required
-def parar_servidor_view(request):
+def stop_server_view(request):
     if is_restart_pending():
         set_restart_pending_flag(False)
+    logger.info("Parando servidor Project Zomboid.", f"Usuario: {request.user.username if request.user.is_authenticated else 'Anônimo'}")
     return executar_comando(settings.PZ_SCRIPT_STOP_PATH, "parada do servidor")
 
 
 @staff_member_required
-def reiniciar_servidor_view(request):
+def restart_server_view(request):
     if is_restart_pending():
         set_restart_pending_flag(False)
+    logger.info("Reiniciando servidor Project Zomboid.", f"Usuario: {request.user.username if request.user.is_authenticated else 'Anônimo'}")
     return executar_comando(settings.PZ_SCRIPT_RESTART_PATH, "reinicialização do servidor")
 
 
 @staff_member_required
-def iniciar_servidor_view(request):
+def start_server_view(request):
+    logger.info("Iniciando servidor Project Zomboid.", f"Usuario: {request.user.username if request.user.is_authenticated else 'Anônimo'}")
     return executar_comando(settings.PZ_SCRIPT_START_PATH, "inicialização do servidor")
 
 
 @staff_member_required
-def reiniciar_mundo_view(request):
+def restart_world_view(request):
     if is_restart_pending():
         set_restart_pending_flag(False)
+    logger.info("Reiniciando mundo do servidor Project Zomboid.", f"Usuario: {request.user.username if request.user.is_authenticated else 'Anônimo'}")
     return executar_comando(settings.PZ_SCRIPT_RESTART_WORLD_PATH, "reinicialização do mundo")
 
 
@@ -80,3 +86,15 @@ def server_status_json_view(request):
             "reiniciar": reverse("mods:reiniciar_servidor"),
         }
     })
+
+
+@staff_member_required
+def view_logs(request):
+    log_path = os.path.join(settings.BASE_DIR, 'logs', 'error.log')  
+    try:
+        with open(log_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()[-100:] 
+    except Exception as e:
+        lines = [f"Erro ao abrir o arquivo de log: {e}"]
+
+    return render(request, 'log_view.html', {'lines': lines})
