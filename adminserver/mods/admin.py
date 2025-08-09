@@ -20,8 +20,12 @@ class ModAdmin(admin.ModelAdmin):
     def get_urls(self):
         from django.urls import path
         urls = super().get_urls()
+
+        info = self.model._meta.app_label, self.model._meta.model_name
+        add_url_name = f'{info[0]}_{info[1]}_add'
+        
         custom_urls = [
-            path('add/', self.admin_site.admin_view(self.add_view), name='mod_add'),
+            path('add/', self.admin_site.admin_view(self.add_view),name=add_url_name),
         ]
         return custom_urls + urls
 

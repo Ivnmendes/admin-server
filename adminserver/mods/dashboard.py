@@ -1,5 +1,6 @@
 import subprocess
 from django.template.loader import render_to_string
+from django.urls import reverse
 from jet.dashboard.dashboard import Dashboard, AppIndexDashboard
 from jet.dashboard.modules import AppList, ModelList, LinkList, RecentActions, DashboardModule
 
@@ -30,7 +31,7 @@ class CustomIndexDashboard(Dashboard):
         self.children.append(LinkList(
             'Links Úteis',
             children=[
-                {'title': 'Adicionar Novo Mod', 'url': '/mods/mod/add/'},
+                {'title': 'Adicionar Novo Mod', 'url': reverse('admin:mods_mod_add')},
             ],
             column=0,
             order=0
