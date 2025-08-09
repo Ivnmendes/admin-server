@@ -107,3 +107,16 @@ def is_pz_server_running():
             
             pass
     return False 
+
+def get_server_status():
+    """
+    Verifica se o processo do servidor está rodando.
+    Retorna uma tupla: (status_code, status_text, status_color)
+    """
+    if is_pz_server_running():
+        if is_restart_pending():
+            return ('pending_restart', 'Reinicialização Pendente', 'warning')
+        else:
+            return ('running', 'Rodando', 'success')
+    else:
+        return ('stopped', 'Parado', 'danger')

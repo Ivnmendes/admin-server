@@ -1,145 +1,70 @@
-from ast import Mod
+from .models import Mod
 import subprocess
 import logging
-from django.shortcuts import redirect, render
-from django.urls import reverse
 from django.views.generic import DetailView
-from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-
+from django.http import JsonResponse
 from adminserver import settings
-from mods.utils import set_restart_pending_flag
+from mods.utils import get_server_status
 
 logger = logging.getLogger(__name__)
+
 
 class ModDetailView(DetailView):
     model = Mod
     template_name = 'mod_detail.html'
 
-@staff_member_required
-def parar_servidor_view(request):
-    """
-    Script de parada do servidor.
-    """
 
-    script_path = settings.PZ_SCRIPT_STOP_PATH
+def executar_comando(script_path, acao):
+    """
+    Executa script via subprocess.Popen de forma assíncrona.
+    """
+    if not script_path:
+        logger.error(f"Caminho do script para {acao} não configurado.")
+        return JsonResponse({'status': 'error', 'message': f'Caminho do script de {acao} não configurado.'})
 
     try:
-        result = subprocess.run(
-            ['sudo', script_path], 
-            check=True, 
-            capture_output=True, 
-            text=True,
-            timeout=30,
-        )
+        subprocess.Popen(['sudo', script_path], text=True)
+        logger.info(f"Comando de {acao} enviado.")
+        return JsonResponse({'status': 'ok', 'message': f'Comando de {acao} enviado.'})
 
-        messages.success(request, f"Comando de parada enviado com sucesso!")
-        logger.info(f"Saída do script stop_pz.sh: {result.stdout}")
+    except FileNotFoundError:
+        logger.exception(f"Script de {acao} não encontrado: {script_path}")
+        return JsonResponse({'status': 'error', 'message': f'Script de {acao} não encontrado.'})
 
-    except subprocess.CalledProcessError as e:
-        messages.error(request, f"Erro ao executar o script de parada.")
-        logger.error(f"Erro no script: {e.stderr}")
+    except OSError as e:
+        logger.exception(f"Erro ao executar script de {acao}: {e}")
+        return JsonResponse({'status': 'error', 'message': f'Erro ao executar script de {acao}.'})
 
-    except subprocess.TimeoutExpired:
-        messages.error(request, f"Tempo limite excedido ao executar o script de parada.")
-        logger.warning("Timeout ao executar o script stop_pz.sh.")
+    except Exception as e:
+        logger.exception(f"Erro inesperado ao executar script de {acao}: {e}")
+        return JsonResponse({'status': 'error', 'message': f'Erro inesperado: {e}'})
 
-    previous_url = request.META.get('HTTP_REFERER', '/') 
 
-    return redirect(previous_url)
+@staff_member_required
+def parar_servidor_view(request):
+    return executar_comando(settings.PZ_SCRIPT_STOP_PATH, "parada do servidor")
+
 
 @staff_member_required
 def reiniciar_servidor_view(request):
-    """
-    Script de reinicialização do servidor.
-    """
+    return executar_comando(settings.PZ_SCRIPT_RESTART_PATH, "reinicialização do servidor")
 
-    script_path = settings.PZ_SCRIPT_RESTART_PATH
-
-    try:
-        result = subprocess.run(
-            ['sudo', script_path], 
-            check=True, 
-            capture_output=True, 
-            text=True,
-            timeout=30
-        )
-
-        messages.success(request, f"Comando de reinicialização enviado com sucesso!")
-
-        set_restart_pending_flag(False)
-        logger.info(f"Saída do script restart_pz.sh: {result.stdout}")
-
-    except subprocess.CalledProcessError as e:
-        messages.error(request, f"Erro ao executar o script de reinicialização.")
-        logger.error(f"Erro no script: {e.stderr}")
-
-    except subprocess.TimeoutExpired:
-        messages.error(request, f"Tempo limite excedido ao executar o script de reinicialização.")
-        logger.warning("Timeout ao executar o script restart_pz.sh.")
-
-    previous_url = request.META.get('HTTP_REFERER', '/') 
-
-    return redirect(previous_url)
 
 @staff_member_required
 def iniciar_servidor_view(request):
-    """
-    Script de inicialização do servidor.
-    """
+    return executar_comando(settings.PZ_SCRIPT_START_PATH, "inicialização do servidor")
 
-    script_path = settings.PZ_SCRIPT_START_PATH
-
-    try:
-        result = subprocess.run(
-            ['sudo', script_path], 
-            check=True, 
-            capture_output=True, 
-            text=True
-        )
-
-        messages.success(request, f"Comando de inicialização enviado com sucesso!")
-        logger.info(f"Saída do script start_pz.sh: {result.stdout}")
-
-    except subprocess.CalledProcessError as e:
-        messages.error(request, f"Erro ao executar o script de inicialização.")
-        logger.error(f"Erro no script: {e.stderr}")
-
-    except subprocess.TimeoutExpired:
-        messages.error(request, f"Tempo limite excedido ao executar o script de inicialização.")
-        logger.warning("Timeout ao executar o script start_pz.sh.")
-
-    previous_url = request.META.get('HTTP_REFERER', '/') 
-
-    return redirect(previous_url)
 
 @staff_member_required
 def reiniciar_mundo_view(request):
-    """
-    Script de reinicialização do mundo.
-    """
+    return executar_comando(settings.PZ_SCRIPT_RESTART_WORLD_PATH, "reinicialização do mundo")
 
-    script_path = settings.PZ_SCRIPT_RESTART_WORLD_PATH
 
-    try:
-        result = subprocess.run(
-            ['sudo', script_path], 
-            check=True, 
-            capture_output=True, 
-            text=True
-        )
-
-        messages.success(request, f"Comando de reinicialização do mundo enviado com sucesso!")
-        logger.info(f"Saída do script restart_world.sh: {result.stdout}")
-
-    except subprocess.CalledProcessError as e:
-        messages.error(request, f"Erro ao executar o script de reinicialização do mundo.")
-        logger.error(f"Erro no script: {e.stderr}")
-
-    except subprocess.TimeoutExpired:
-        messages.error(request, f"Tempo limite excedido ao executar o script de reinicialização do mundo.")
-        logger.warning("Timeout ao executar o script restart_world.sh.")
-
-    previous_url = request.META.get('HTTP_REFERER', '/')
-
-    return redirect(previous_url)
+def server_status_json_view(request):
+    status_code, status_text, status_color = get_server_status()
+    return JsonResponse({
+        'status_code': status_code,
+        'status_text': status_text,
+        'status_color': status_color
+    })

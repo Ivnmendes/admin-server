@@ -9,4 +9,5 @@ urlpatterns = [
     path('reiniciar-server/', views.reiniciar_servidor_view, name='reiniciar_servidor'),
     path('iniciar-server/', views.iniciar_servidor_view, name='iniciar_servidor'),
     path('reiniciar-mundo/', views.reiniciar_mundo_view, name='reiniciar_mundo'),
+    path('server/status/', views.server_status_json_view, name='server_status_json'),
 ]
