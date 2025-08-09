@@ -6,23 +6,20 @@ from jet.dashboard.modules import AppList, ModelList, LinkList, RecentActions, D
 from mods.utils import is_restart_pending
 
 from .models import Mod 
+from .utils import is_pz_server_running
 
 def get_server_status():
     """
     Verifica se o processo do servidor está rodando.
     Retorna uma tupla: (status_code, status_text, status_color)
     """
-    command = "screen -ls | grep -q pzserver"
-    try:
-        subprocess.check_output(command, shell=True)
-
-        is_restart_value = is_restart_pending()
-        status = ('running', 'Rodando', 'success') if not is_restart_value else ('pending', 'Reinicialização Pendente', 'warning')
-        
-        return status
-    except subprocess.CalledProcessError:
+    if is_pz_server_running():
+        if is_restart_pending():
+            return ('pending_restart', 'Reinicialização Pendente', 'warning')
+        else:
+            return ('running', 'Rodando', 'success')
+    else:
         return ('stopped', 'Parado', 'danger')
-
 
 class ServerControlWidget(DashboardModule):
     title = 'Controle do Servidor'

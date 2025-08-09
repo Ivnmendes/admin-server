@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 import re
 from django.conf import settings
 from django.core.cache import cache
+import psutil
+
 
 def scrappling_steam_workshop(url):
     try:
@@ -89,3 +91,19 @@ def is_restart_pending():
     Retorna True se estiver pendente, caso contrário, False.
     """
     return cache.get(RESTART_PENDING_KEY, False)
+
+def is_pz_server_running():
+    """
+    Verifica se o processo do servidor Project Zomboid está a rodar.
+    Retorna True se o processo for encontrado, caso contrário False.
+    """
+   
+    for proc in psutil.process_iter(['name', 'username']):
+        try:
+            
+            if 'ProjectZomboid' in proc.info['name'] and proc.info['username'] == 'pzuser':
+                return True 
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            
+            pass
+    return False 
