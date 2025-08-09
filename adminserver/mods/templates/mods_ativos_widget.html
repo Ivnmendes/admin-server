@@ -1,0 +1,7 @@
+<ul>
+    {% for mod in mods %}
+        <li><a href="{{ mod.get_absolute_url }}">{{ mod.name }}</a></li>
+    {% empty %}
+        <li>Nenhum mod ativo.</li>
+    {% endfor %}
+</ul>

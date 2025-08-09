@@ -1,3 +1,4 @@
+from django.urls import reverse
 from .models import Mod
 import subprocess
 import logging
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 class ModDetailView(DetailView):
     model = Mod
     template_name = 'mod_detail.html'
-
+    
 
 def executar_comando(script_path, acao):
     """
@@ -64,7 +65,12 @@ def reiniciar_mundo_view(request):
 def server_status_json_view(request):
     status_code, status_text, status_color = get_server_status()
     return JsonResponse({
-        'status_code': status_code,
-        'status_text': status_text,
-        'status_color': status_color
+        "status_code": status_code,
+        "status_text": status_text,
+        "status_color": status_color,
+        "urls": {
+            "iniciar": reverse("mods:iniciar_servidor"),
+            "parar": reverse("mods:parar_servidor"),
+            "reiniciar": reverse("mods:reiniciar_servidor"),
+        }
     })

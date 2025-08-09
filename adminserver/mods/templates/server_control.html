@@ -8,151 +8,183 @@
 <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener("DOMContentLoaded", function () {
     Fancybox.bind("[data-fancybox]", {
-        dragToClose: false,
-        groupAll: false
+      dragToClose: false,
+      groupAll: false
     });
-});
+  });
 </script>
 
-<div class="card shadow-sm h-100"> 
-    <div class="card-body d-flex flex-column">
-        <div class="d-flex align-items-center mb-3">
-            <h5 class="card-title mb-0">Status</h5>
-            <span id="server-status-badge" 
-                class="badge bg-{{ status_color }} ms-auto text-white p-2">
-                {{ status_text }}
-            </span>
-        </div>
-        
-        <p class="card-text text-muted small">Ações de gerenciamento rápido do servidor.</p>
-        
-        <div id="server-control-widget" class="mt-auto">
-            <div id="action-buttons" class="d-grid gap-2">
-                {% if status_code == 'stopped' %}
-                    <a href="{% url 'mods:iniciar_servidor' %}" 
-                    class="btn btn-success text-white action-btn" 
-                    data-target-status="running">
-                        <i class="fas fa-play me-2"></i> Iniciar Servidor
-                    </a>
-                {% elif status_code == 'running' or status_code == 'pending_restart' %}
-                    <div class="btn-group w-100">
-                        <a href="{% url 'mods:parar_servidor' %}" 
-                        class="btn btn-danger btn-sm text-white action-btn" 
-                        data-target-status="stopped">
-                            <i class="fas fa-stop me-1"></i> Parar
-                        </a>
-                        <a href="{% url 'mods:reiniciar_servidor' %}" 
-                        class="btn btn-warning btn-sm text-white action-btn" 
-                        data-target-status="running">
-                            <i class="fas fa-sync me-1"></i> Reiniciar
-                        </a>
-                    </div>
-                {% endif %}
-        
-                <a data-fancybox data-src="#confirm-reset-world" href="javascript:;" 
-                   class="btn btn-outline-danger btn-sm mt-2" id="open-reset-world-modal">
-                    <i class="fas fa-exclamation-triangle me-2"></i> Reiniciar Mundo
-                </a>
-            </div>
-
-            <div id="loading-feedback" style="display:none" class="text-center mt-2">
-                <div class="spinner-border text-primary" role="status"></div>
-                <p class="small text-muted mt-1">Executando ação...</p>
-            </div>
-        </div>
-
+<div class="card shadow-sm h-100">
+  <div class="card-body d-flex flex-column">
+    <div class="d-flex align-items-center mb-3">
+      <h5 class="card-title mb-0">Status</h5>
+      <span id="server-status-badge"
+            class="badge bg-{{ status_color }} ms-auto text-white p-2">
+        {{ status_text }}
+      </span>
     </div>
+
+    <p class="card-text text-muted small">
+      Ações de gerenciamento rápido do servidor.
+    </p>
+
+    <div id="server-control-widget" class="mt-auto">
+      <div id="action-buttons" class="d-grid gap-2">
+        {% if status_code == 'stopped' %}
+          <a href="{% url 'mods:iniciar_servidor' %}"
+             class="btn btn-success text-white action-btn"
+             data-target-status="running">
+            <i class="fas fa-play me-2"></i> Iniciar Servidor
+          </a>
+        {% elif status_code in 'running pending_restart' %}
+          <div class="btn-group w-100">
+            <a href="{% url 'mods:parar_servidor' %}"
+               class="btn btn-danger btn-sm text-white action-btn"
+               data-target-status="stopped">
+              <i class="fas fa-stop me-1"></i> Parar
+            </a>
+            <a href="{% url 'mods:reiniciar_servidor' %}"
+               class="btn btn-warning btn-sm text-white action-btn"
+               data-target-status="running">
+              <i class="fas fa-sync me-1"></i> Reiniciar
+            </a>
+          </div>
+        {% endif %}
+
+        <a data-fancybox data-src="#confirm-reset-world" href="javascript:;"
+           class="btn btn-outline-danger btn-sm mt-2" id="open-reset-world-modal">
+          <i class="fas fa-exclamation-triangle me-2"></i> Reiniciar Mundo
+        </a>
+      </div>
+
+      <div id="loading-feedback" style="display:none" class="text-center mt-2">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="small text-muted mt-1">Executando ação...</p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div style="display: none; max-width: 400px;" id="confirm-reset-world">
-    <div class="p-3 text-center">
-        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
-        <h2 class="mb-2">Você tem certeza?</h2>
-        <p class="text-muted">
-            Esta ação é irreversível e irá apagar <strong>permanentemente</strong> todo o progresso do mundo no servidor.
-        </p>
-        <div class="d-flex justify-content-center mt-4">
-            <button class="btn btn-secondary me-3" data-fancybox-close>Cancelar</button>
-            <a href="{% url 'mods:reiniciar_mundo' %}" 
-               class="btn btn-danger text-white action-btn-world"
-               data-target-status="running"
-               data-fancybox-close>
-               Sim, Reiniciar o Mundo
-            </a>
-        </div>
+  <div class="p-3 text-center">
+    <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+    <h2 class="mb-2">Você tem certeza?</h2>
+    <p class="text-muted">
+      Esta ação é irreversível e irá apagar <strong>permanentemente</strong> todo o progresso do mundo no servidor.
+    </p>
+    <div class="d-flex justify-content-center mt-4">
+      <button class="btn btn-secondary me-3" data-fancybox-close>Cancelar</button>
+      <a href="{% url 'mods:reiniciar_mundo' %}"
+         class="btn btn-danger text-white action-btn-world"
+         data-target-status="running"
+         data-fancybox-close>
+        Sim, Reiniciar o Mundo
+      </a>
     </div>
+  </div>
 </div>
 
 <script>
-$(document).ready(function() {
+  $(document).ready(function () {
     const statusCheckUrl = "{% url 'mods:server_status_json' %}";
     let pollingInterval;
 
-    function updateStatusBadge() {
-        $.getJSON(statusCheckUrl, function(data) {
-            const badge = $("#server-status-badge");
-            badge
-                .removeClass()
-                .addClass(`badge bg-${data.status_color} ms-auto text-white p-2`)
-                .text(data.status_text);
-        });
+    function updateStatus() {
+      $.getJSON(statusCheckUrl, function (data) {
+        const badge = $("#server-status-badge");
+        badge
+          .removeClass()
+          .addClass(`badge bg-${data.status_color} ms-auto text-white p-2`)
+          .text(data.status_text);
+
+        let buttonsHtml = '';
+        if (data.status_code === 'stopped') {
+          buttonsHtml = `
+            <a href="${data.urls.iniciar}"
+               class="btn btn-success text-white action-btn"
+               data-target-status="running">
+              <i class="fas fa-play me-2"></i> Iniciar Servidor
+            </a>`;
+        } else if (['running', 'pending_restart'].includes(data.status_code)) {
+          buttonsHtml = `
+            <div class="btn-group w-100">
+              <a href="${data.urls.parar}"
+                 class="btn btn-danger btn-sm text-white action-btn"
+                 data-target-status="stopped">
+                <i class="fas fa-stop me-1"></i> Parar
+              </a>
+              <a href="${data.urls.reiniciar}"
+                 class="btn btn-warning btn-sm text-white action-btn"
+                 data-target-status="running">
+                <i class="fas fa-sync me-1"></i> Reiniciar
+              </a>
+            </div>`;
+        }
+        buttonsHtml += `
+          <a data-fancybox data-src="#confirm-reset-world" href="javascript:;"
+             class="btn btn-outline-danger btn-sm mt-2" id="open-reset-world-modal">
+            <i class="fas fa-exclamation-triangle me-2"></i> Reiniciar Mundo
+          </a>`;
+
+        $('#action-buttons').html(buttonsHtml);
+      });
     }
 
     function checkStatus(targetStatus) {
-        $.getJSON(statusCheckUrl, function(data) {
-            if (data.status_code === targetStatus) {
-                clearInterval(pollingInterval);
-                updateStatusBadge();
-                $('#loading-feedback').hide();
-                $('#action-buttons').show();
-            }
-        });
+      $.getJSON(statusCheckUrl, function (data) {
+        if (data.status_code === targetStatus) {
+          clearInterval(pollingInterval);
+          updateStatus();
+          $('#loading-feedback').hide();
+          $('#action-buttons').show();
+        }
+      });
     }
 
-    setInterval(updateStatusBadge, 5000);
+    setInterval(updateStatus, 5000);
 
-    $('#server-control-widget').on('click', '.action-btn', function(event) {
-        event.preventDefault();
-        const actionUrl = $(this).attr('href');
-        const targetStatus = $(this).data('target-status');
+    $('#server-control-widget').on('click', '.action-btn', function (event) {
+      event.preventDefault();
+      const actionUrl = $(this).attr('href');
+      const targetStatus = $(this).data('target-status');
 
-        $('#action-buttons').hide();
-        $('#loading-feedback').show();
+      $('#action-buttons').hide();
+      $('#loading-feedback').show();
 
-        $.getJSON(actionUrl, function(response) {
-            if (response.status === 'ok') {
-                pollingInterval = setInterval(function() {
-                    checkStatus(targetStatus);
-                }, 3000);
-            } else {
-                alert('Erro: ' + response.message);
-                $('#loading-feedback').hide();
-                $('#action-buttons').show();
-            }
-        });
+      $.getJSON(actionUrl, function (response) {
+        if (response.status === 'ok') {
+          pollingInterval = setInterval(function () {
+            checkStatus(targetStatus);
+          }, 3000);
+        } else {
+          alert('Erro: ' + response.message);
+          $('#loading-feedback').hide();
+          $('#action-buttons').show();
+        }
+      });
     });
 
-    $('#confirm-reset-world').on('click', '.action-btn-world', function(event) {
-        event.preventDefault();
-        const actionUrl = $(this).attr('href');
-        const targetStatus = $(this).data('target-status');
+    $('#confirm-reset-world').on('click', '.action-btn-world', function (event) {
+      event.preventDefault();
+      const actionUrl = $(this).attr('href');
+      const targetStatus = $(this).data('target-status');
 
-        $('#action-buttons').hide();
-        $('#loading-feedback').show();
+      $('#action-buttons').hide();
+      $('#loading-feedback').show();
 
-        $.getJSON(actionUrl, function(response) {
-            if (response.status === 'ok') {
-                pollingInterval = setInterval(function() {
-                    checkStatus(targetStatus);
-                }, 3000);
-            } else {
-                alert('Erro: ' + response.message);
-                $('#loading-feedback').hide();
-                $('#action-buttons').show();
-            }
-        });
+      $.getJSON(actionUrl, function (response) {
+        if (response.status === 'ok') {
+          pollingInterval = setInterval(function () {
+            checkStatus(targetStatus);
+          }, 3000);
+        } else {
+          alert('Erro: ' + response.message);
+          $('#loading-feedback').hide();
+          $('#action-buttons').show();
+        }
+      });
     });
-});
+  });
 </script>

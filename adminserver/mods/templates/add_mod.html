@@ -25,7 +25,10 @@
               {% endif %}
             </div>
           {% endfor %}
-          <button type="submit" name="url_submit" class="btn btn-primary">Adicionar Mod</button>
+          <div id="buttonsContainer" class="d-flex gap-3">
+            <button type="submit" name="url_submit" class="btn btn-primary">Adicionar Mod</button>
+            <button type="submit" name="switch_to_manual" value="1" class="btn btn-primary">Adicionar manualmente</button>
+          </div>
         </form>
 
       {% elif manual_form %}

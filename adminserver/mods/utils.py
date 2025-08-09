@@ -1,5 +1,4 @@
-import configparser
-import io
+from django.db import IntegrityError
 from .models import Mod
 import requests
 from bs4 import BeautifulSoup
@@ -7,73 +6,143 @@ import re
 from django.conf import settings
 from django.core.cache import cache
 import psutil
+import logging
+
+logger = logging.getLogger(__name__)
+
+class Build42Error(Exception):
+    """Custom exception for Build 42 errors."""
+    pass
 
 
-def scrappling_steam_workshop(url):
+def scrappling_steam_workshop(url, user):
     try:
         match = re.search(r'id=(\d+)', url)
-
         if not match:
             return None, None, None
-
+        # Extrai o ID do workshop da URL
         workshop_id = match.group(1)
 
+        # Prepara o request com headers para evitar bloqueios
         headers = {'User-Agent': 'Mozilla/5.0'}
         response = requests.get(url, headers=headers)
+
+        # Verifica se a resposta foi bem-sucedida
         response.raise_for_status()
 
+        # Faz o parsing do HTML da página
         soup = BeautifulSoup(response.text, 'html.parser')
 
+        # Verifica se o mod é compatível com Build 41
+        categories = soup.find('div', class_='rightDetailsBlock').text.strip()
+        if categories:
+            has_build_42 = categories.find('Build 42')
+
+            if has_build_42 != -1:
+                has_build_41 = categories.find('Build 41')
+                if has_build_41 == -1:
+                    raise Build42Error("Mod compatível apenas com Build 42.")
+                
+        # Extrai o nome do mod
         title = soup.find('div', class_='workshopItemTitle').text.strip()
 
-        mod_id_element = soup.find('div', class_='workshopItemDescription').text.strip()
-
+        # Extrai o ID do mod da descrição
+        mod_id_element = soup.find('div', class_='workshopItemDescription').get_text(separator="\n").strip()
         if mod_id_element:
-            mod_ids_text = mod_id_element.split('Mod ID:')[1].strip()
-            mod_ids = ','.join([s.strip() for s in mod_ids_text.split(',')])
+            match = re.search(r'Mod ID:(.*)', mod_id_element)
+            if match:
+                mod_id_text = match.group(1).split('\n')[0].strip()
+                mod_id = ','.join([s.strip() for s in mod_id_text.split(',')])
+
         else:
             print("Mod ID not found in the page.")
             return None, None, None
+        
+        # Verifica se o mod tem requisitos obrigatórios
+        # Se sim, tenta extrair o nome e ID do mod requerido
+        requirements = soup.find('div', class_='requiredItemsContainer')
+        if requirements:
+            requirements_url = requirements.find('a')['href']
+            AddMod(requirements_url, user)
 
-        return title, workshop_id, mod_ids
+        return title, workshop_id, mod_id
     
+    except Build42Error:
+        raise
+
     except Exception as e:
-        print(f"Erro no scraping: {e}")
+        logger.error(f"Erro no scraping: {e}, url={url}, workshop_id={workshop_id}, mod_id={mod_id if 'mod_id' in locals() else 'N/A'}")
         return None, None, None
-    
+
+
+def AddMod(urls, user):
+    """
+    Função auxiliar para mods diretamente ao banco de dados.
+    """
+    results = { 'errors': [], 'success': [] }
+
+    for url in urls.split(';'):
+        url = url.strip()
+        try:
+            name, workshop_id, mod_id = scrappling_steam_workshop(url, user)
+            if not name or not workshop_id or not mod_id:
+                results['errors'].append(name if name else url)
+                continue
+
+            mod, created = Mod.objects.get_or_create(
+                mod_id=mod_id,
+                defaults={
+                    'workshop_id': workshop_id,
+                    'status': 'disabled',
+                    'name': name,
+                    'mod_link': url,
+                    'suggested_by': user,
+                }
+            )
+            if created:
+                results['success'].append(name)
+            else:
+                results['errors'].append(f"{name} já existe.")
+
+        except Build42Error as e:
+            logger.error(f"Erro ao adicionar mod: {e}, url={url}, workshop_id={workshop_id}, mod_id={mod_id if 'mod_id' in locals() else 'N/A'}, user={user.username if user else 'N/A'}")
+            results['errors'].append(f"{name if name else url} - {str(e)}")
+
+        except IntegrityError as e:
+            logger.error(f"Erro de integridade ao adicionar mod: {e}, url={url}, workshop_id={workshop_id}, mod_id={mod_id if 'mod_id' in locals() else 'N/A'}, user={user.username if user else 'N/A'}")
+            results['errors'].append(f"{name if name else url} - Mod já existe.")
+
+        except Exception as e:
+            logger.error(f"Erro inesperado ao adicionar mod: {e}, url={url}, workshop_id={workshop_id}, mod_id={mod_id if 'mod_id' in locals() else 'N/A'}, user={user.username if user else 'N/A'}")
+            results['errors'].append(f"{name if name else url} - Erro inesperado: {str(e)}")
+
+    return results
+
+
 def update_server_mods():
     """
     Lê a configuração do servidor PZ, atualiza os mods com base nos
     mods ativos no banco de dados e salva o arquivo de volta
-    sem os cabeçalhos de seção.
     """
     enabled_mods = Mod.objects.filter(status='enabled')
     workshop_ids = ';'.join([mod.workshop_id for mod in enabled_mods])
 
     mod_id = ';'.join([mod.mod_id for mod in enabled_mods])
 
-    config = configparser.ConfigParser()
-    dummy_section = 'PZServerSettings'
+    file_path = settings.PZ_CONFIG_PATH
+    with open(file_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
 
-    try:
-        with open(settings.PZ_CONFIG_PATH, 'r') as f:
-            config_string = f'[{dummy_section}]\n{f.read()}'
-        config.read_string(config_string)
-    except FileNotFoundError:
-        config.add_section(dummy_section)
+    new_lines = []
+    for line in lines:
+        if line.startswith("WorkshopItems="):
+            line = f"WorkshopItems={workshop_ids}\n"
+        elif line.startswith("Mods="):
+            line = f"Mods={mod_id}\n"
+        new_lines.append(line)
 
-    config.set(dummy_section, 'WorkshopItems', workshop_ids)
-    config.set(dummy_section, 'Mods', mod_id)
-
-    string_io = io.StringIO()
-    config.write(string_io)
-    config_string_with_header = string_io.getvalue()
-
-    lines = config_string_with_header.split('\n', 1)
-    cleaned_config = lines[1] if len(lines) > 1 else ''
-
-    with open(settings.PZ_CONFIG_PATH, 'w') as configfile:
-        configfile.write(cleaned_config)
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.writelines(new_lines)
 
 
 RESTART_PENDING_KEY = 'server_restart_pending'

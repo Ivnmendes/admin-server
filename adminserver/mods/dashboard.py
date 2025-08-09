@@ -21,6 +21,17 @@ class ServerControlWidget(DashboardModule):
             'status_color': status_color,
         })
 
+class ModsAtivosWidget(DashboardModule):
+    title = 'Mods Ativos'
+    template = 'mods_ativos_widget.html'
+    is_empty = False
+
+    def render(self):
+        mods_ativos = Mod.objects.filter(status='enabled')
+        return render_to_string(self.template, {
+            'mods': mods_ativos
+        })
+    
 
 class CustomIndexDashboard(Dashboard):
 
@@ -32,6 +43,7 @@ class CustomIndexDashboard(Dashboard):
             'Links Úteis',
             children=[
                 {'title': 'Adicionar Novo Mod', 'url': reverse('admin:mods_mod_add')},
+                {'title': 'Gerenciar Mods', 'url': reverse('admin:mods_mod_changelist')},
             ],
             column=0,
             order=0
@@ -43,13 +55,8 @@ class CustomIndexDashboard(Dashboard):
             order=1,
         ))
 
-        mods_ativos = Mod.objects.filter(status='enabled')
-        self.children.append(LinkList(
-            'Mods Ativos',
-            children=[
-                {'title': mod.name, 'url': mod.get_absolute_url()} for mod in mods_ativos
-            ],
+        self.children.append(ModsAtivosWidget(
+            title='Mods Ativos',
             column=2,
             order=1,
-            cache_timeout=0,
         ))

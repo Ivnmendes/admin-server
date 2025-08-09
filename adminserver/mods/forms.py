@@ -23,12 +23,13 @@ class ModForm(forms.ModelForm):
         }
 
     def clean_mod_link(self):
-        url = self.cleaned_data.get('mod_link')
-        
-        if url and 'steamcommunity.com/sharedfiles/filedetails/' not in url:
-            raise forms.ValidationError("URL inválida. Por favor, insira um link da Oficina Steam.")
-            
-        return url
+        urls = self.cleaned_data.get('mod_link')
+        if urls:
+            for url in urls.split(';'):
+                url = url.strip()
+                if 'steamcommunity.com/' not in url or 'filedetails/' not in url:
+                    raise forms.ValidationError(f"URL inválida: {url}")
+        return urls
 
 class ModManualForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):

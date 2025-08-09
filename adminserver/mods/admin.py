@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from .models import Mod
 from .forms import ModForm, ModManualForm
-from .utils import scrappling_steam_workshop, set_restart_pending_flag, update_server_mods
+from .utils import AddMod, scrappling_steam_workshop, set_restart_pending_flag, update_server_mods, Build42Error
 import re
 
 @admin.register(Mod)
@@ -38,20 +38,23 @@ class ModAdmin(admin.ModelAdmin):
             if 'url_submit' in request.POST:
                 url_form = ModForm(request.POST)
                 if url_form.is_valid():
-                    url = url_form.cleaned_data['mod_link']
-                    name, workshop_id, mod_id = scrappling_steam_workshop(url)
-
-                    if name and workshop_id and mod_id:
-                        mod_instance = Mod(name=name, workshop_id=workshop_id, mod_id=mod_id, mod_link=url, suggested_by=request.user)
-                        mod_instance.save()
-                        self.message_user(request, f"Mod '{name}' adicionado com sucesso.", messages.SUCCESS)
-                        return redirect(reverse('admin:mods_mod_changelist'))
-                    else:
-                        self.message_user(request, "Falha no scraping. Insira os dados manualmente.", messages.WARNING)
-                        ws_id_fallback = re.search(r'id=(\d+)', url).group(1) if re.search(r'id=(\d+)', url) else ''
-                        manual_form = ModManualForm(initial={'workshop_id': ws_id_fallback})
-                        url_form = None 
-                        title = 'Adicionar Mod Manualmente'
+                    urls = url_form.cleaned_data['mod_link']
+                    results = AddMod(urls, request.user)
+            
+                    if results['errors']:
+                        self.message_user(request, f"Erros ao adicionar mods: {', '.join(results['errors'])}", messages.ERROR)
+                    if results['success']:
+                        self.message_user(request, f"Mods adicionados com sucesso: {', '.join(results['success'])}", messages.SUCCESS)
+                        
+                    return redirect(reverse('admin:mods_mod_changelist'))
+                else:
+                    print(url_form.errors)
+                    urls = request.POST.get('mod_link', '')
+                    self.message_user(request, "Falha no scraping. Insira os dados manualmente.", messages.WARNING)
+                    ws_id_fallback = re.search(r'id=(\d+)', urls).group(1) if re.search(r'id=(\d+)', urls) else ''
+                    manual_form = ModManualForm(initial={'workshop_id': ws_id_fallback})
+                    url_form = None 
+                    title = 'Adicionar Mod Manualmente'
 
             elif 'manual_submit' in request.POST:
                 manual_form = ModManualForm(request.POST)
@@ -63,7 +66,10 @@ class ModAdmin(admin.ModelAdmin):
                     self.message_user(request, "Mod adicionado manualmente com sucesso.", messages.SUCCESS)
                     return redirect(reverse('admin:mods_mod_changelist'))
                 url_form = None
-
+            elif 'switch_to_manual' in request.POST:
+                manual_form = ModManualForm()
+                url_form = None
+                title = 'Adicionar Mod Manualmente'
         else:
             url_form = ModForm()
 
