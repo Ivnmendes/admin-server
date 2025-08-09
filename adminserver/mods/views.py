@@ -6,7 +6,7 @@ from django.views.generic import DetailView
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
 from adminserver import settings
-from mods.utils import get_server_status
+from mods.utils import get_server_status, is_restart_pending, set_restart_pending_flag
 
 logger = logging.getLogger(__name__)
 
@@ -44,11 +44,15 @@ def executar_comando(script_path, acao):
 
 @staff_member_required
 def parar_servidor_view(request):
+    if is_restart_pending():
+        set_restart_pending_flag(False)
     return executar_comando(settings.PZ_SCRIPT_STOP_PATH, "parada do servidor")
 
 
 @staff_member_required
 def reiniciar_servidor_view(request):
+    if is_restart_pending():
+        set_restart_pending_flag(False)
     return executar_comando(settings.PZ_SCRIPT_RESTART_PATH, "reinicialização do servidor")
 
 
@@ -59,6 +63,8 @@ def iniciar_servidor_view(request):
 
 @staff_member_required
 def reiniciar_mundo_view(request):
+    if is_restart_pending():
+        set_restart_pending_flag(False)
     return executar_comando(settings.PZ_SCRIPT_RESTART_WORLD_PATH, "reinicialização do mundo")
 
 
