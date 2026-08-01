@@ -13,5 +13,6 @@ dependencies = [
     "redis",
     "psycopg[binary]",
     "requests",
-    "gunicorn"
+    "gunicorn",
+    "whitenoise"
 ]
