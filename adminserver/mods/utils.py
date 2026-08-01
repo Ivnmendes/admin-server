@@ -178,13 +178,29 @@ def is_pz_server_running():
     Retorna True se o processo for encontrado, caso contrário False.
     """
    
-    for proc in psutil.process_iter(['name', 'username']):
+    import subprocess
+    import os
+
+    # If running inside Docker with socket mounted, check the container status
+    if os.path.exists('/var/run/docker.sock'):
         try:
-            
-            if 'ProjectZomboid' in proc.info['name'] and proc.info['username'] == 'pzuser':
+            output = subprocess.check_output(['sudo', 'docker', 'inspect', '-f', '{{.State.Running}}', 'zomboid-server'], text=True, stderr=subprocess.DEVNULL)
+            return output.strip() == 'true'
+        except Exception:
+            try:
+                output = subprocess.check_output(['docker', 'inspect', '-f', '{{.State.Running}}', 'zomboid-server'], text=True, stderr=subprocess.DEVNULL)
+                return output.strip() == 'true'
+            except Exception:
+                pass
+                
+    # Fallback to process checking for local execution
+    for proc in psutil.process_iter(['name', 'cmdline']):
+        try:
+            name = proc.info.get('name', '') or ''
+            cmdline = ' '.join(proc.info.get('cmdline', []) or [])
+            if 'ProjectZomboid' in name or 'zombie.network.GameServer' in cmdline or 'zomboid-server' in cmdline:
                 return True 
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            
             pass
     return False 
 

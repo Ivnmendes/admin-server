@@ -14,5 +14,7 @@ dependencies = [
     "psycopg[binary]",
     "requests",
     "gunicorn",
-    "whitenoise"
+    "whitenoise",
+    "beautifulsoup4",
+    "psutil"
 ]
