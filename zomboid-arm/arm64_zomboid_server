@@ -7,7 +7,7 @@ apt install -y git build-essential cmake gcc-arm-linux-gnueabihf openjdk-21-jdk
 
 # Enable ARM hard float architecture / install dependencies
 dpkg --add-architecture armhf && sudo apt update
-apt install -y libc6:armhf libncurses5:armhf libstdc++6:armhf
+apt install -y libc6:armhf libncurses6:armhf libstdc++6:armhf
 
 # Open firewall ports and reload the fw
 ufw allow 16261/udp
@@ -20,7 +20,7 @@ cd box86 && mkdir -p build && cd build
 cmake .. -DRPI4ARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
 make -j$(nproc)
 make install
-cp box32 /usr/local/bin/
+# cp box32 /usr/local/bin/
 systemctl restart systemd-binfmt
 cd $HOME
 
@@ -30,7 +30,7 @@ cd box64 && mkdir -p build && cd build
 cmake .. -DRPI4ARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
 make -j$(nproc)
 make install
-cp box64 /usr/local/bin/
+# cp box64 /usr/local/bin/
 systemctl restart systemd-binfmt
 cd $HOME
 
@@ -38,7 +38,7 @@ cd $HOME
 mkdir steamcmd && cd steamcmd
 curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar zxvf -
 # Update steamcmd
-./steamcmd.sh +quit > /dev/null
+DEBUGGER="box86" ./steamcmd.sh +quit > /dev/null
 
 
 ############################################################################################
@@ -52,10 +52,10 @@ if [[ "$use_beta" =~ ^[Yy]$ ]]; then
     read -p 'Please specify the version (i.e. 42.13.3), otherwise "unstable" will be used: ' beta_version
     beta_version=${beta_version:-unstable}
     echo "installing beta $beta_version"
-    ./steamcmd.sh +force_install_dir /opt/zomboid-server/ +@sSteamCmdForcePlatformType linux +login anonymous +app_update 380870 -beta "$beta_version" validate +quit > /dev/null
+    DEBUGGER="box86" ./steamcmd.sh +force_install_dir /opt/zomboid-server/ +@sSteamCmdForcePlatformType linux +login anonymous +app_update 380870 -beta "$beta_version" validate +quit
 else
     echo "installing current release"
-    ./steamcmd.sh +force_install_dir /opt/zomboid-server/ +@sSteamCmdForcePlatformType linux +login anonymous +app_update 380870 validate +quit > /dev/null
+    DEBUGGER="box86" ./steamcmd.sh +force_install_dir /opt/zomboid-server/ +@sSteamCmdForcePlatformType linux +login anonymous +app_update 380870 validate +quit
 fi
 ############################################################################################
 ############################################################################################
