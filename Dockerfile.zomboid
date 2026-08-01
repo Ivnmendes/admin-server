@@ -1,0 +1,54 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies and Java
+RUN apt-get update && apt-get full-upgrade -y && \
+    apt-get install -y git build-essential cmake gcc-arm-linux-gnueabihf openjdk-21-jdk curl sudo && \
+    rm -rf /var/lib/apt/lists/*
+
+# Enable ARM hard float architecture
+RUN dpkg --add-architecture armhf && apt-get update && \
+    apt-get install -y libc6:armhf libncurses5:armhf libstdc++6:armhf && \
+    rm -rf /var/lib/apt/lists/*
+
+# Build Box86
+RUN git clone https://github.com/ptitSeb/box86 && \
+    cd box86 && mkdir -p build && cd build && \
+    cmake .. -DRPI4ARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo && \
+    make -j$(nproc) && make install && cp box32 /usr/local/bin/ && \
+    cd / && rm -rf /box86
+
+# Build Box64
+RUN git clone https://github.com/ptitSeb/box64.git && \
+    cd box64 && mkdir -p build && cd build && \
+    cmake .. -DRPI4ARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo && \
+    make -j$(nproc) && make install && cp box64 /usr/local/bin/ && \
+    cd / && rm -rf /box64
+
+# Setup SteamCMD
+RUN mkdir -p /root/steamcmd && cd /root/steamcmd && \
+    curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar zxvf - && \
+    ./steamcmd.sh +quit > /dev/null
+
+# Install Zomboid Server
+RUN mkdir -p /opt/zomboid-server && \
+    cd /root/steamcmd && \
+    ./steamcmd.sh +force_install_dir /opt/zomboid-server/ +@sSteamCmdForcePlatformType linux +login anonymous +app_update 380870 validate +quit > /dev/null
+
+RUN ln -sf /opt/zomboid-server/linux64/steamclient.so /opt/zomboid-server/linux64/libsteam.so
+
+ENV LD_LIBRARY_PATH="/opt/zomboid-server/linux64:/opt/zomboid-server/natives:/opt/zomboid-server/jre64/lib:."
+ENV BOX64_JVM=1
+ENV BOX64_DYNAREC_BIGBLOCK=0
+ENV BOX64_DYNAREC_STRONGMEM=1
+
+WORKDIR /opt/zomboid-server/
+
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 16261/udp 16262/udp 8766/udp 27015/udp
+
+CMD ["/entrypoint.sh"]

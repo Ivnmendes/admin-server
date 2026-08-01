@@ -1,9 +1,9 @@
 #!/bin/bash
 # Script para reiniciar o servidor Project Zomboid
 
-PZ_USER="pzuser"
-SCREEN_NAME="pzserver"
-SERVER_DIR="/home/pzuser/Steam/steamapps/common/Project Zomboid Dedicated Server"
+PZ_USER="${PZ_USER:-pzuser}"
+SCREEN_NAME="${SCREEN_NAME:-pzserver}"
+SERVER_DIR="${SERVER_DIR:-/home/pzuser/Steam/steamapps/common/Project Zomboid Dedicated Server}"
 
 echo "Tentando reiniciar o servidor..."
 

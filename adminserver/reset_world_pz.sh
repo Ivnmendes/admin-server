@@ -1,10 +1,10 @@
 #!/bin/bash
 # Script para resetar o mundo do servidor Project Zomboid
 
-PZ_USER="pzuser"
-SCREEN_NAME="pzserver"
-SAVE_DIR="/home/pzuser/Zomboid/Saves/Multiplayer/servertest" # Atenção ao nome da pasta do save
-SERVER_DIR="/home/pzuser/Steam/steamapps/common/Project Zomboid Dedicated Server"
+PZ_USER="${PZ_USER:-pzuser}"
+SCREEN_NAME="${SCREEN_NAME:-pzserver}"
+SAVE_DIR="${SAVE_DIR:-/home/pzuser/Zomboid/Saves/Multiplayer/servertest}" # Atenção ao nome da pasta do save
+SERVER_DIR="${SERVER_DIR:-/home/pzuser/Steam/steamapps/common/Project Zomboid Dedicated Server}"
 
 echo "AVISO: Este script irá apagar permanentemente o mundo do servidor."
 read -p "Você tem certeza que deseja continuar? (s/n) " -n 1 -r
@@ -24,7 +24,7 @@ if sudo -u $PZ_USER screen -list | grep -q "$SCREEN_NAME"; then
 fi
 
 # Apaga a pasta do save
-if sudo -u pzuser test -d "$SAVE_DIR"; then
+if sudo -u $PZ_USER test -d "$SAVE_DIR"; then
     echo "Apagando os arquivos do mundo em $SAVE_DIR..."
     sudo -u $PZ_USER rm -rf "$SAVE_DIR"
     echo "Arquivos do mundo apagados."

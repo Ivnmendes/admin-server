@@ -1,0 +1,17 @@
+[project]
+name = "adminserver"
+version = "0.1.0"
+description = "Project Zomboid Admin Server"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "django>=5.0",
+    "django-environ",
+    "django-jet-reboot",
+    "django-crispy-forms",
+    "crispy-bootstrap5",
+    "redis",
+    "psycopg[binary]",
+    "requests",
+    "gunicorn"
+]

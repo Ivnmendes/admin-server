@@ -1,8 +1,8 @@
 #!/bin/bash
 # Script para parar o servidor Project Zomboid
 
-PZ_USER="pzuser"
-SCREEN_NAME="pzserver"
+PZ_USER="${PZ_USER:-pzuser}"
+SCREEN_NAME="${SCREEN_NAME:-pzserver}"
 
 echo "Verificando se o servidor está rodando..."
 
