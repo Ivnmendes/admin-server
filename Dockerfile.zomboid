@@ -9,7 +9,7 @@ RUN apt-get update && apt-get full-upgrade -y && \
 
 # Enable ARM hard float architecture
 RUN dpkg --add-architecture armhf && apt-get update && \
-    apt-get install -y libc6:armhf libncurses5:armhf libstdc++6:armhf && \
+    apt-get install -y libc6:armhf libncurses6:armhf libstdc++6:armhf && \
     rm -rf /var/lib/apt/lists/*
 
 # Build Box86
