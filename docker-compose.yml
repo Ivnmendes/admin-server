@@ -1,61 +1,25 @@
 version: '3.8'
 
 services:
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile.django
-    container_name: adminserver-web
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgres://pzuser:pzpassword@db:5432/pzdb
-      - REDIS_URL=redis://redis:6379/1
-      - PZ_USER=${PZ_USER:-pzuser}
-      - SCREEN_NAME=${SCREEN_NAME:-pzserver}
-      - SERVER_DIR=${SERVER_DIR:-/home/pzuser/Steam/steamapps/common/Project Zomboid Dedicated Server}
-      - SAVE_DIR=${SAVE_DIR:-/home/pzuser/Zomboid/Saves/Multiplayer/servertest}
-    volumes:
-      - ./adminserver:/app/adminserver
-      - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      - db
-      - redis
-
   db:
     image: postgres:15-alpine
     container_name: adminserver-db
+    restart: always
     environment:
       POSTGRES_USER: pzuser
       POSTGRES_PASSWORD: pzpassword
       POSTGRES_DB: pzdb
+    ports:
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:alpine
     container_name: adminserver-redis
+    restart: always
     ports:
-      - "6379:6379"
-
-  zomboid:
-    build:
-      context: .
-      dockerfile: Dockerfile.zomboid
-    container_name: zomboid-server
-    environment:
-      - PZ_SERVER_NAME=servertest
-      - PZ_ADMIN_PASSWORD=change_me_to_secure_password
-    ports:
-      - "16261:16261/udp"
-      - "16262:16262/udp"
-      - "8766:8766/udp"
-      - "27015:27015/udp"
-    volumes:
-      - zomboid_data:/root/Zomboid
-      - zomboid_opt:/opt/zomboid-server
+      - "127.0.0.1:6379:6379"
 
 volumes:
   postgres_data:
-  zomboid_data:
-  zomboid_opt:
