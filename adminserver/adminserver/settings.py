@@ -139,6 +139,9 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 JET_INDEX_DASHBOARD = 'mods.dashboard.CustomIndexDashboard'
 
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOGS_DIR, exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
