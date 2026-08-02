@@ -3,7 +3,7 @@ cd $HOME
 
 # Install java / dependencies
 apt update && sudo apt full-upgrade -y
-apt install -y git build-essential cmake gcc-arm-linux-gnueabihf openjdk-21-jdk
+apt install -y git build-essential cmake gcc-arm-linux-gnueabihf openjdk-21-jdk unzip
 
 # Enable ARM hard float architecture / install dependencies
 dpkg --add-architecture armhf && sudo apt update
@@ -34,16 +34,11 @@ make install
 systemctl restart systemd-binfmt
 cd $HOME
 
-# Steamcmd setup
-mkdir -p steamcmd && cd steamcmd
-curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar zxvf -
-# Update steamcmd
-export BOX86_NOBANNER=1
-export BOX86_NOVULKAN=1
-export BOX86_NOLANDMARK=1
-export BOX86_NO_CEF=1
-rm -f linux32/crashhandler.so linux32/steamerrorreporter
-DEBUGGER="box86" ./steamcmd.sh +login anonymous +quit
+# DepotDownloader setup (Substituto nativo e mais rapido para o SteamCMD no ARM)
+mkdir -p depotdownloader && cd depotdownloader
+curl -sqL -o depotdownloader.zip "https://github.com/SteamRE/DepotDownloader/releases/latest/download/DepotDownloader-linux-arm64.zip"
+unzip -q -o depotdownloader.zip
+chmod +x DepotDownloader
 
 
 ############################################################################################
@@ -57,10 +52,10 @@ if [[ "$use_beta" =~ ^[Yy]$ ]]; then
     read -p 'Please specify the version (i.e. 42.13.3), otherwise "unstable" will be used: ' beta_version
     beta_version=${beta_version:-unstable}
     echo "installing beta $beta_version"
-    DEBUGGER="box86" ./steamcmd.sh +force_install_dir /opt/zomboid-server/ +@sSteamCmdForcePlatformType linux +login anonymous +app_update 380870 -beta "$beta_version" validate +quit
+    ./DepotDownloader -app 380870 -os linux -beta "$beta_version" -dir /opt/zomboid-server/
 else
     echo "installing current release"
-    DEBUGGER="box86" ./steamcmd.sh +force_install_dir /opt/zomboid-server/ +@sSteamCmdForcePlatformType linux +login anonymous +app_update 380870 validate +quit
+    ./DepotDownloader -app 380870 -os linux -dir /opt/zomboid-server/
 fi
 ############################################################################################
 ############################################################################################
