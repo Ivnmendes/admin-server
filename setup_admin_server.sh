@@ -7,7 +7,7 @@ sudo docker compose up -d
 echo "2. Instalando uv (Gerenciador de Dependências Python super rápido)..."
 if ! command -v uv &> /dev/null; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    source $HOME/.cargo/env
+    source $HOME/.local/bin/env
 fi
 
 cd adminserver
