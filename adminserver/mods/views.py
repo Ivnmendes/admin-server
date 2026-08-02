@@ -27,7 +27,7 @@ def executar_comando(script_path, acao):
         return JsonResponse({'status': 'error', 'message': f'Caminho do script de {acao} não configurado.'})
 
     try:
-        subprocess.Popen(['sudo', script_path], text=True)
+        subprocess.Popen(['sudo', 'bash', script_path], text=True)
         logger.info(f"Comando de {acao} enviado.")
         return JsonResponse({'status': 'ok', 'message': f'Comando de {acao} enviado.'})
 
