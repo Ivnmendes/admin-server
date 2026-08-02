@@ -9,30 +9,14 @@ apt install -y git build-essential cmake gcc-arm-linux-gnueabihf openjdk-21-jdk 
 dpkg --add-architecture armhf && sudo apt update
 apt install -y libc6:armhf libncurses6:armhf libstdc++6:armhf
 
-# Open firewall ports and reload the fw
-ufw allow 16261/udp
-ufw allow 16262/udp
-ufw reload
+# FEX-Emu Setup (Emulador ultra-preciso para substituir o Box64)
+sudo add-apt-repository ppa:fex-emu/fex -y
+sudo apt update
+sudo apt install -y fex-emu-arm64
 
-# Clone and build Box86 (emulation for steamcmd)
-[ ! -d "box86" ] && git clone https://github.com/ptitSeb/box86
-cd box86 && mkdir -p build && cd build
-cmake .. -DRPI4ARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
-make -j$(nproc)
-make install
-# cp box32 /usr/local/bin/
-systemctl restart systemd-binfmt
-cd $HOME
+# Faz o download do sistema de arquivos x86_64 para o FEX
+FEXRootFSFetcher -y
 
-# Clone and build Box64 (emulation for zomboid)
-[ ! -d "box64" ] && git clone https://github.com/ptitSeb/box64.git
-cd box64 && mkdir -p build && cd build
-cmake .. -DRPI4ARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
-make -j$(nproc)
-make install
-# cp box64 /usr/local/bin/
-systemctl restart systemd-binfmt
-cd $HOME
 
 # DepotDownloader setup (Substituto nativo e mais rapido para o SteamCMD no ARM)
 mkdir -p depotdownloader && cd depotdownloader
@@ -78,11 +62,7 @@ User=$(whoami)
 WorkingDirectory=/opt/zomboid-server/
 
 # IMPORTANT: force data directory + prevent LD_PRELOAD issues
-Environment="LD_LIBRARY_PATH=/opt/zomboid-server/linux64:/opt/zomboid-server/natives:/opt/zomboid-server/jre64/lib:."
-Environment="BOX64_JVM=1"
-Environment="BOX64_DYNAREC_BIGBLOCK=0"
-Environment="BOX64_DYNAREC_STRONGMEM=1"
-ExecStart=/usr/local/bin/box64 /opt/zomboid-server/jre64/bin/java -Djava.awt.headless=true -Xms4g -Xmx16g -XX:ActiveProcessorCount=4 -Dzomboid.steam=1 -Dzomboid.znetlog=1 -Djava.library.path=linux64/:natives/ -Djava.security.egd=file:/dev/urandom -XX:+UseSerialGC -XX:-UseCompressedOops -XX:TieredStopAtLevel=1 -cp "java/:java/projectzomboid.jar" zombie.network.GameServer
+ExecStart=/usr/bin/FEXBash -c '/opt/zomboid-server/start-server.sh'
 
 Restart=always
 RestartSec=10
