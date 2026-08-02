@@ -15,7 +15,7 @@ ufw allow 16262/udp
 ufw reload
 
 # Clone and build Box86 (emulation for steamcmd)
-git clone https://github.com/ptitSeb/box86
+[ ! -d "box86" ] && git clone https://github.com/ptitSeb/box86
 cd box86 && mkdir -p build && cd build
 cmake .. -DRPI4ARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
 make -j$(nproc)
@@ -25,7 +25,7 @@ systemctl restart systemd-binfmt
 cd $HOME
 
 # Clone and build Box64 (emulation for zomboid)
-git clone https://github.com/ptitSeb/box64.git
+[ ! -d "box64" ] && git clone https://github.com/ptitSeb/box64.git
 cd box64 && mkdir -p build && cd build
 cmake .. -DRPI4ARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
 make -j$(nproc)
@@ -35,10 +35,10 @@ systemctl restart systemd-binfmt
 cd $HOME
 
 # Steamcmd setup
-mkdir steamcmd && cd steamcmd
+mkdir -p steamcmd && cd steamcmd
 curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar zxvf -
 # Update steamcmd
-DEBUGGER="box86" ./steamcmd.sh +quit > /dev/null
+DEBUGGER="box86" ./steamcmd.sh +quit
 
 
 ############################################################################################
