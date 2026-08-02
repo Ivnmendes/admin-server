@@ -38,7 +38,12 @@ cd $HOME
 mkdir -p steamcmd && cd steamcmd
 curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar zxvf -
 # Update steamcmd
-DEBUGGER="box86" ./steamcmd.sh +quit
+export BOX86_NOBANNER=1
+export BOX86_NOVULKAN=1
+export BOX86_NOLANDMARK=1
+export BOX86_NO_CEF=1
+rm -f linux32/crashhandler.so linux32/steamerrorreporter
+DEBUGGER="box86" ./steamcmd.sh +login anonymous +quit
 
 
 ############################################################################################
