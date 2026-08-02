@@ -198,7 +198,9 @@ def is_pz_server_running():
         try:
             name = proc.info.get('name', '') or ''
             cmdline = ' '.join(proc.info.get('cmdline', []) or [])
-            if 'ProjectZomboid' in name or 'zombie.network.GameServer' in cmdline or 'zomboid-server' in cmdline:
+            if 'journalctl' in cmdline or 'tail' in cmdline or 'systemctl' in cmdline:
+                continue
+            if 'ProjectZomboid' in name or 'zombie.network.GameServer' in cmdline or 'zomboid-server.service' in cmdline:
                 return True 
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass

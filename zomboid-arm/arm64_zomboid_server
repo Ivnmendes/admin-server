@@ -10,11 +10,9 @@ dpkg --add-architecture armhf && sudo apt update
 apt install -y libc6:armhf libncurses6:armhf libstdc++6:armhf
 
 # FEX-Emu Setup (Emulador ultra-preciso para substituir o Box64)
-sudo add-apt-repository ppa:fex-emu/fex -y
 sudo apt update
-sudo apt install -y fex-emu-arm64
-
-# Faz o download do sistema de arquivos x86_64 para o FEX
+sudo apt install -y curl python3
+curl --silent https://raw.githubusercontent.com/FEX-Emu/FEX/main/Scripts/InstallFEX.py | sudo python3
 FEXRootFSFetcher -y
 
 
